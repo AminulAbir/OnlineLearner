@@ -1,0 +1,11 @@
+<html>
+    <h>Information</h>
+    <p>{{ value[0][1] }}</p>
+    <p>Creator: {{ value[0][2] }}</p>
+    <p>{{ value[0][3] }}</p>
+    <p>No of free places: {{ value[0][4] }}</p>
+    <form action=url_for("new_enroll") method="POST">
+        <input type="submit", value="enroll">
+    </form>
+
+</html>

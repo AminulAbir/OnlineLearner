@@ -1,4 +1,7 @@
 <html>
+    <a href="{{ url_for('view_main') }}">Main Page</a>
+    <a href="{{ url_for('new_course') }}">Create Course</a>
+    <p>My Courses</p>
    {% for val in value %}
        <p>ID: {{ val[0] }}</p>
        <p>Name: {{ val[1] }}</p>
@@ -6,5 +9,15 @@
        <p>Enrollment key: {{ val[3] }}</p>
        <p>Free Places: {{ val[4] }}</p>
        <p>Creator: {{ val[5] }}</p>
+    {% endfor %}
+
+    <p>Available Courses</p>
+   {% for vals in values %}
+       <p>ID: {{ vals[0] }}</p>
+       <p>Name: {{ vals[1] }}</p>
+       <p>Description: {{ vals[2] }}</p>
+       <p>Enrollment key: {{ vals[3] }}</p>
+       <p>Free Places: {{ vals[4] }}</p>
+       <p>Creator: {{ vals[5] }}</p>
     {% endfor %}
 </html>

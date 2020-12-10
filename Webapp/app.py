@@ -9,7 +9,8 @@ app.config['MYSQL_PASSWORD'] = 'anindo'
 app.config['MYSQL_DB'] = 'lab3'
 
 mysql = MySQL(app)
-user = 110
+user = 111
+id = 12
 
 @app.route('/')
 @app.route('/view_main')
@@ -37,12 +38,27 @@ def new_course():
 def view_course():
 
     cur = mysql.connection.cursor()
-    res = cur.execute("SELECT * FROM course")
+    res = cur.execute("SELECT * FROM course WHERE creator = %s", (user,))
+    if res>0:
+        value = cur.fetchall()
+
+    res1 = cur.execute("SELECT * FROM course WHERE creator != %s", (user,))
+    if res1 > 0:
+        values = cur.fetchall()
+    cur.close()
+
+    return render_template("view_course.html", value=value, values=values)
+
+@app.route('/view_course_detail')
+def view_course_detail():
+
+    cur = mysql.connection.cursor()
+    res = cur.execute("select * from course_detail where ID = %s", (id,))
     if res>0:
         value = cur.fetchall()
     cur.close()
 
-    return render_template("view_course.html", value=value)
+    return render_template("view_course_detail.html", value=value)
 
 if __name__ == '__main__':
     app.run()
