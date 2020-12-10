@@ -1,0 +1,14 @@
+<html>
+{% with messages = get_flashed_messages() %}
+    {% if messages %}
+        {% for message in messages %}
+            <!-- Do something with the message -->
+            <p>{{ message }}</p><br>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+   <div>
+       <a href="{{ url_for('new_course') }}">Create Course</a>
+       <a href="{{ url_for('view_course') }}">View Courses</a>
+   </div>
+</html>
