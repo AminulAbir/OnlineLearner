@@ -14,7 +14,6 @@
        <p>ID: {{ val[0] }}</p>
        <p>Name: <a href="{{ url_for('view_course_detail', cid=val[0]) }}">{{ val[1] }}</a></p>
        <p>Description: {{ val[2] }}</p>
-       <p>Enrollment key: {{ val[3] }}</p>
        <p>Free Places: {{ val[4] }}</p>
        <p>Creator: {{ val[5] }}</p>
     {% endfor %}
@@ -25,7 +24,6 @@
        <p>ID: {{ vals[0] }}</p>
        <p>Name: <a href="{{ url_for('view_course_detail', cid=vals[0]) }}">{{ vals[1] }}</a></p>
        <p>Description: {{ vals[2] }}</p>
-       <p>Enrollment key: {{ vals[3] }}</p>
        <p>Free Places: {{ vals[4] }}</p>
        <p>Creator: {{ vals[5] }}</p>
         {% endfor %}

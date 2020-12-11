@@ -8,15 +8,16 @@
         {% endif %}
     {% endwith %}
     <h1>{{ name }}</h1>
-    <form method="POST" action="">
-        {% if booked<free %}
+
+    {% if booked<free %}
+        <form method="POST" action="">
             {% if key %}
                 Enrollment Key<input type="text" name="ek">
             {% endif %}
             <input type="submit" value="enroll">
-        {% else %}
-            <p>Course is already full</p>
-        {% endif %}
+    {% else %}
+        <p>Course is already full</p>
+    {% endif %}
     </form>
 
 

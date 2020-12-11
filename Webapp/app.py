@@ -11,7 +11,7 @@ app.config['MYSQL_PASSWORD'] = 'anindo'
 app.config['MYSQL_DB'] = 'lab3'
 
 mysql = MySQL(app)
-user = 113
+user = 112
 
 @app.route('/')
 @app.route('/view_main')
@@ -83,9 +83,9 @@ def new_enroll(cid):
     key = info[0][1]
 
     cur.execute("select count(*) from enroll group by course having course = %s", (cid,))
-    booked = int(cur.fetchall())
+    booked = cur.fetchall()
     cur.execute("select free_places from course where ID = %s", (cid,))
-    free = int(cur.fetchall())
+    free = cur.fetchall()
 
     if request.method == 'POST':
         if key != None:
