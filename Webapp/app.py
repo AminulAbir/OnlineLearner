@@ -11,7 +11,7 @@ app.config['MYSQL_PASSWORD'] = 'anindo'
 app.config['MYSQL_DB'] = 'lab3'
 
 mysql = MySQL(app)
-user = 110
+user = 113
 
 @app.route('/')
 @app.route('/view_main')
@@ -82,10 +82,15 @@ def new_enroll(cid):
     name = info[0][0]
     key = info[0][1]
 
+    cur.execute("select count(*) from enroll group by course having course = %s", (cid,))
+    booked = int(cur.fetchall())
+    cur.execute("select free_places from course where ID = %s", (cid,))
+    free = int(cur.fetchall())
+
     if request.method == 'POST':
         if key != None:
             ekey = request.form["ek"]
-            if key == int(ekey):
+            if key == ekey:
                 cur.execute(
                     "INSERT INTO enroll(user, course, date_of_entry) VALUES(%s, %s, %s)",
                     (user, cid, datetime.today().strftime('%Y-%m-%d')))
@@ -103,7 +108,7 @@ def new_enroll(cid):
             return redirect(url_for("view_course"))
     cur.close()
 
-    return render_template("new_enroll.html", name=name, key=key)
+    return render_template("new_enroll.html", name=name, key=key, free=free, booked=booked)
 
 
 if __name__ == '__main__':
