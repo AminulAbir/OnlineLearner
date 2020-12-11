@@ -45,9 +45,9 @@ def new_course():
 def view_course():
 
     cur = mysql.connection.cursor()
-    res = cur.execute("SELECT * FROM view_course WHERE user = %s", (user,))
-    if res>0:
-        value = cur.fetchall()
+    cur.execute("SELECT * FROM view_course WHERE user = %s", (user,))
+
+    value = cur.fetchall()
 
     cur.execute("select * from view_course where ID not in (SELECT ID FROM view_course WHERE user = %s)", (user,))
 
@@ -60,6 +60,8 @@ def view_course():
 @app.route('/view_course/<int:cid>')
 def view_course_detail(cid):
     infos = [] # list of course id from enroll
+    idInfos = [] # list for delete function
+
     cur = mysql.connection.cursor()
     res = cur.execute("select * from course_detail where ID = %s", (cid,))
     if res>0:
@@ -67,12 +69,19 @@ def view_course_detail(cid):
 
     cur.execute("select * from enroll where user = %s", (user,))
     info = cur.fetchall()
+
+    cur.execute("select ID from course where creator = %s", (user,))
+    idInfo = cur.fetchall()
+
     cur.close()
 
     for i in info:
         infos.append(int(i[1]))
 
-    return render_template("view_course_detail.html", value=value, infos=infos)
+    for j in idInfo:
+        idInfos.append(j[0])
+
+    return render_template("view_course_detail.html", value=value, infos=infos, idInfos=idInfos)
 
 @app.route('/new_enroll/<int:cid>', methods=['GET', 'POST'])
 def new_enroll(cid):
@@ -109,6 +118,17 @@ def new_enroll(cid):
     cur.close()
 
     return render_template("new_enroll.html", name=name, key=key, free=free, booked=booked)
+
+@app.route('/delete/<int:cid>')
+def delete(cid):
+
+    cur = mysql.connection.cursor()
+    cur.execute("delete from course where ID = %s", (cid,))
+    mysql.connection.commit()
+    cur.close()
+    flash("Course has been deleted successfully!!!", "success")
+    return redirect(url_for("view_course"))
+
 
 
 if __name__ == '__main__':
