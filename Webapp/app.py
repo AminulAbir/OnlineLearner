@@ -11,7 +11,7 @@ app.config['MYSQL_PASSWORD'] = 'anindo'
 app.config['MYSQL_DB'] = 'lab3'
 
 mysql = MySQL(app)
-user = 112
+user = 113
 
 @app.route('/')
 @app.route('/view_main')
@@ -49,7 +49,7 @@ def view_course():
 
     value = cur.fetchall()
 
-    cur.execute("select * from view_course where ID not in (SELECT ID FROM view_course WHERE user = %s)", (user,))
+    cur.execute("select distinct ID, name, description, enrollmentkey, free_places, uname from view_course where ID not in (SELECT ID FROM view_course WHERE user = %s)", (user,))
 
     values = cur.fetchall()
 
@@ -91,13 +91,11 @@ def new_enroll(cid):
     name = info[0][0]
     key = info[0][1]
 
-    cur.execute("select count(*) from enroll group by course having course = %s", (cid,))
-    booked = cur.fetchall()
     cur.execute("select free_places from course where ID = %s", (cid,))
     free = cur.fetchall()
 
     if request.method == 'POST':
-        if key != None:
+        if key != None :
             ekey = request.form["ek"]
             if key == ekey:
                 cur.execute(
@@ -105,6 +103,14 @@ def new_enroll(cid):
                     (user, cid, datetime.today().strftime('%Y-%m-%d')))
                 mysql.connection.commit()
                 flash("Welcome to the course!!!", "success")
+
+                red = free[0][0]-1
+
+                cur.execute(
+                    "UPDATE course SET free_places = %s where ID = %s",(red, cid))
+                mysql.connection.commit()
+                cur.close()
+
                 return redirect(url_for("view_course"))
             else:
                 flash("Wrong enrollment key", "danger")
@@ -114,10 +120,17 @@ def new_enroll(cid):
                 (user, cid, datetime.today().strftime('%Y-%m-%d')))
             mysql.connection.commit()
             flash("Welcome to the course!!!", "success")
+
+            red = free[0][0]-1
+
+            cur.execute("UPDATE course SET free_places = %s where ID = %s", (red, cid))
+            mysql.connection.commit()
+            cur.close()
+
             return redirect(url_for("view_course"))
     cur.close()
 
-    return render_template("new_enroll.html", name=name, key=key, free=free, booked=booked)
+    return render_template("new_enroll.html", name=name, key=key, free=free)
 
 @app.route('/delete/<int:cid>')
 def delete(cid):
