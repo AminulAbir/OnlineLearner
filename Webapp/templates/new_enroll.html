@@ -9,7 +9,7 @@
     {% endwith %}
     <h1>{{ name }}</h1>
 
-    {% if free %}
+    {% if free[0][0] %}
         <form method="POST" action="">
             {% if key %}
                 Enrollment Key<input type="text" name="ek">

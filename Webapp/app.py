@@ -7,11 +7,11 @@ app.secret_key = "mndkfjkdsfj"
 
 app.config['MYSQL_HOST'] = 'localhost'
 app.config['MYSQL_USER'] = 'root'
-app.config['MYSQL_PASSWORD'] = 'anindo'
-app.config['MYSQL_DB'] = 'lab3'
+app.config['MYSQL_PASSWORD'] = 'mycountry'
+app.config['MYSQL_DB'] = 'webapp'
 
 mysql = MySQL(app)
-user = 113
+user = 101
 
 @app.route('/')
 @app.route('/view_main')
@@ -73,15 +73,18 @@ def view_course_detail(cid):
     cur.execute("select ID from course where creator = %s", (user,))
     idInfo = cur.fetchall()
 
-    cur.close()
-
     for i in info:
         infos.append(int(i[1]))
 
     for j in idInfo:
         idInfos.append(j[0])
 
-    return render_template("view_course_detail.html", value=value, infos=infos, idInfos=idInfos)
+    cur.execute("select * from tasks where nr = %s order by number ASC;", (cid,))
+    taskInfo = cur.fetchall()
+
+    cur.close()
+
+    return render_template("view_course_detail.html", value=value, infos=infos, idInfos=idInfos, taskInfo=taskInfo)
 
 @app.route('/new_enroll/<int:cid>', methods=['GET', 'POST'])
 def new_enroll(cid):
@@ -134,7 +137,6 @@ def new_enroll(cid):
 
 @app.route('/delete/<int:cid>')
 def delete(cid):
-
     cur = mysql.connection.cursor()
     cur.execute("delete from course where ID = %s", (cid,))
     mysql.connection.commit()
@@ -142,6 +144,11 @@ def delete(cid):
     flash("Course has been deleted successfully!!!", "success")
     return redirect(url_for("view_course"))
 
+
+@app.route('/new_assignment/<int:cid>')
+def new_assignment(cid):
+
+    return "Still need to do!!!"
 
 
 if __name__ == '__main__':
