@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import Flask, render_template, request, redirect, url_for, flash, abort
 from flask_mysqldb import MySQL
 from datetime import datetime
 
@@ -11,12 +11,14 @@ app.config['MYSQL_PASSWORD'] = 'mycountry'
 app.config['MYSQL_DB'] = 'webapp'
 
 mysql = MySQL(app)
-user = 101
+user = 6
+
 
 @app.route('/')
 @app.route('/view_main')
 def view_main():
     return render_template("view_main.html")
+
 
 @app.route('/new_course', methods=['GET', 'POST'])
 def new_course():
@@ -41,6 +43,7 @@ def new_course():
 
     return render_template("new_course.html")
 
+
 @app.route('/view_course')
 def view_course():
 
@@ -56,6 +59,7 @@ def view_course():
     cur.close()
 
     return render_template("view_course.html", value=value, values=values)
+
 
 @app.route('/view_course/<int:cid>')
 def view_course_detail(cid):
@@ -79,12 +83,16 @@ def view_course_detail(cid):
     for j in idInfo:
         idInfos.append(j[0])
 
-    cur.execute("select * from tasks where nr = %s order by number ASC;", (cid,))
-    taskInfo = cur.fetchall()
+    #cur.execute("select * from tasks where nr = %s", (cid,))
+    #tInfo = cur.fetchall()
+
+    cur.execute("select st2.number, st2.name, sb.submission_text, st2.nr from (select st1.number, t.name, st1.sid, st1.nr from (select st.number, nr, sid from (select * from tasks left join (select sid, tid from submit where cid = %s and user = %s) as s1 on number=s1.tid) as st  where st.nr= %s) as st1 join tasks t on st1.number=t.number) as st2 left join submission sb on st2.sid = sb.id;", (cid, user, cid))
+    stInfo = cur.fetchall()
 
     cur.close()
 
-    return render_template("view_course_detail.html", value=value, infos=infos, idInfos=idInfos, taskInfo=taskInfo)
+    return render_template("view_course_detail.html", value=value, infos=infos, idInfos=idInfos, stInfo=stInfo)
+
 
 @app.route('/new_enroll/<int:cid>', methods=['GET', 'POST'])
 def new_enroll(cid):
@@ -135,6 +143,7 @@ def new_enroll(cid):
 
     return render_template("new_enroll.html", name=name, key=key, free=free)
 
+
 @app.route('/delete/<int:cid>')
 def delete(cid):
     cur = mysql.connection.cursor()
@@ -145,10 +154,34 @@ def delete(cid):
     return redirect(url_for("view_course"))
 
 
-@app.route('/new_assignment/<int:cid>')
-def new_assignment(cid):
+@app.route('/new_assignment/<int:tid>', methods=['GET', 'POST'])
+def new_assignment(tid):
+    cur = mysql.connection.cursor()
+    cur.execute("select * from submit_task where number = %s", (tid,))
+    obj = cur.fetchall()
+    cur.close()
+    if request.method == "POST":
+        text = request.form["txt"]
+        cur = mysql.connection.cursor()
 
-    return "Still need to do!!!"
+        cur.execute("select * from submit")
+        asub = cur.fetchall()
+        for sub in asub:
+            if (sub[2] == tid and sub[1] == obj[0][4] and sub[3] == user):
+                abort(404, description="You can not submit for this task")
+
+        cur.execute("insert into submission(submission_text) values(%s)", (text,))
+        mysql.connection.commit()
+        cur.execute("select id from submission where submission_text = %s", (text,))
+        id = cur.fetchall()
+        cur.execute("insert into submit values(%s, %s, %s, %s)", (id, obj[0][4], tid, user))
+        mysql.connection.commit()
+
+        cur.close()
+
+        flash("Task Submitted successfully", "success")
+        return redirect(url_for("view_course_detail", cid=obj[0][4]))
+    return render_template("new_assignment.html", obj=obj)
 
 
 if __name__ == '__main__':
