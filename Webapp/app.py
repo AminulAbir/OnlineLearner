@@ -83,10 +83,7 @@ def view_course_detail(cid):
     for j in idInfo:
         idInfos.append(j[0])
 
-    #cur.execute("select * from tasks where nr = %s", (cid,))
-    #tInfo = cur.fetchall()
-
-    cur.execute("select st2.number, st2.name, sb.submission_text, st2.nr from (select st1.number, t.name, st1.sid, st1.nr from (select st.number, nr, sid from (select * from tasks left join (select sid, tid from submit where cid = %s and user = %s) as s1 on number=s1.tid) as st  where st.nr= %s) as st1 join tasks t on st1.number=t.number) as st2 left join submission sb on st2.sid = sb.id;", (cid, user, cid))
+    cur.execute("select st2.number, st2.name, sb.submission_text, st2.nr from (select st1.number, t.name, st1.sid, st1.nr from (select st.number, nr, sid from (select * from tasks left join (select sid, tid from submit where cid = %s and user = %s) as s1 on number=s1.tid) as st  where st.nr= %s) as st1 join tasks t on st1.number=t.number) as st2 left join submission sb on st2.sid = sb.id", (cid, user, cid))
     stInfo = cur.fetchall()
 
     cur.close()
