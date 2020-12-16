@@ -2,10 +2,11 @@
     <a href="{{ url_for('view_main') }}">Main Page</a>
     <a href="{{ url_for('view_course') }}">View Courses</a>
     <form method="POST" action="">
-        Name <input type="text" name="nm" required>
-        Enroll Key <input type="text" name="ek">
-        No of free places <input type="number" name="fp" required>
-        Description <input type="text" name="des" required>
+        Name <input type="text" name="nm"><br>
+        Enroll Key <input type="text" name="ek"><br>
+        No of free places <input type="number" name="fp"><br>
+        <p>Description</p>
+        <textarea name="des" rows="8" cols="80"></textarea><br>
         <input type="submit" value="create">
     </form>
 </html>

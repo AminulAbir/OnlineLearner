@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, abort
 from flask_mysqldb import MySQL
 from datetime import datetime
+import random
 
 app = Flask(__name__)
 app.secret_key = "mndkfjkdsfj"
@@ -27,6 +28,14 @@ def new_course():
         key = request.form["ek"]
         place = request.form["fp"]
         text = request.form["des"]
+
+        if len(name)==0 or len(name)>50:
+            abort(404, description="Enter Valid Name")
+
+        intPlace = int(place)
+
+        if isinstance(intPlace, int)==False or intPlace>100:
+            abort(404, description="Enter Valid number of free place")
 
         cur = mysql.connection.cursor()
         if key:
@@ -83,12 +92,12 @@ def view_course_detail(cid):
     for j in idInfo:
         idInfos.append(j[0])
 
-    cur.execute("select st2.number, st2.name, sb.submission_text, st2.nr from (select st1.number, t.name, st1.sid, st1.nr from (select st.number, nr, sid from (select * from tasks left join (select sid, tid from submit where cid = %s and user = %s) as s1 on number=s1.tid) as st  where st.nr= %s) as st1 join tasks t on st1.number=t.number) as st2 left join submission sb on st2.sid = sb.id", (cid, user, cid))
+    cur.execute("select * from (select st2.number, st2.name, st2.sid, sb.submission_text, st2.nr, st2.user from (select st1.number, t.name, st1.sid, st1.nr, st1.user from (select st.number, nr, sid, user from (select * from tasks left join (select sid, tid, user from submit where cid = %s and user = %s) as s1 on number=s1.tid) as st  where st.nr= %s) as st1 join tasks t on st1.number=t.number) as st2 left join submission sb on st2.sid = sb.id) as st3 left join avgGrade as ag on st3.sid=ag.submission", (cid, user, cid))
     stInfo = cur.fetchall()
 
     cur.close()
 
-    return render_template("view_course_detail.html", value=value, infos=infos, idInfos=idInfos, stInfo=stInfo)
+    return render_template("view_course_detail.html", value=value, user=user, infos=infos, idInfos=idInfos, stInfo=stInfo)
 
 
 @app.route('/new_enroll/<int:cid>', methods=['GET', 'POST'])
@@ -179,6 +188,59 @@ def new_assignment(tid):
         flash("Task Submitted successfully", "success")
         return redirect(url_for("view_course_detail", cid=obj[0][4]))
     return render_template("new_assignment.html", obj=obj)
+
+
+@app.route('/assess/<int:cid>', methods=['GET', 'POST'])
+def assess(cid):
+    arrayAssess = []
+    arrayAssess2 = []
+
+# for randomly display of tasks in rating option
+    cur = mysql.connection.cursor()
+    cur.execute(
+        "select ssb.tid, ssb.sid, t.name, t.description, ssb.submission_text from (SELECT * FROM submit s join submission sb on s.sid=sb.id where cid = %s) as ssb join tasks t on ssb.tid=t.number", (cid,))
+    objAssess = cur.fetchall()
+
+    for obj in objAssess:
+        arrayAssess.append(obj)
+
+    objRandom = random.choice(arrayAssess)
+
+    cur.execute("select submission, user from canrate")
+    subUser = cur.fetchall()
+
+    cur.execute("select sid, user from submit where cid = %s", (cid,))
+    sidUser = cur.fetchall()
+
+
+# inorder to avoid the rate option for the tasks which is done by user self.
+    if (objRandom[1], user) in sidUser:
+        cur.execute(
+            "select ssb.tid, ssb.sid, t.name, t.description, ssb.submission_text from (SELECT * FROM submit s join submission sb on s.sid=sb.id where cid = %s and sid != %s and user != %s) as ssb join tasks t on ssb.tid=t.number",
+            (cid, objRandom[1], user))
+        objAssess = cur.fetchall()
+        for obj in objAssess:
+            arrayAssess2.append(obj)
+        objRandom = random.choice(arrayAssess2)
+
+    cur.close()
+
+    if request.method == "POST":
+
+        grade = int(request.form.get("gd"))
+        comment = request.form["cmt"]
+        subId = int(request.form["sb"])
+
+        if (subId, user) in subUser:
+            abort(404, description="You have already rated for the course")
+
+        cur = mysql.connection.cursor()
+        cur.execute("insert into canrate values(%s, %s, %s, %s)", (grade, comment, subId, user))
+        mysql.connection.commit()
+        cur.close()
+        return redirect(url_for("view_course_detail", cid=cid))
+
+    return render_template("assess.html", objRandom=objRandom)
 
 
 if __name__ == '__main__':
