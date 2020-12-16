@@ -9,14 +9,10 @@
     {% endwith %}
     <h1>{{ name }}</h1>
 
-    {% if free[0][0] %}
-        <form method="POST" action="">
-            {% if key %}
-                Enrollment Key<input type="text" name="ek">
-            {% endif %}
-            <input type="submit" value="enroll">
-    {% else %}
-        <p>Course is already full</p>
-    {% endif %}
+    <form method="POST" action="">
+        {% if key %}
+            Enrollment Key<input type="text" name="ek">
+        {% endif %}
+        <input type="submit" value="enroll">
     </form>
 </html>

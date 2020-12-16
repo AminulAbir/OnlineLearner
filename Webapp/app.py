@@ -12,7 +12,7 @@ app.config['MYSQL_PASSWORD'] = 'mycountry'
 app.config['MYSQL_DB'] = 'webapp'
 
 mysql = MySQL(app)
-user = 6
+user = 2
 
 
 @app.route('/')
@@ -111,6 +111,11 @@ def new_enroll(cid):
     cur.execute("select free_places from course where ID = %s", (cid,))
     free = cur.fetchall()
 
+    # if there is no free place then return to course page
+    if not free[0][0]:
+        flash("Course is already full", "danger")
+        return redirect(url_for("view_course"))
+
     if request.method == 'POST':
         if key != None :
             ekey = request.form["ek"]
@@ -145,6 +150,7 @@ def new_enroll(cid):
             cur.close()
 
             return redirect(url_for("view_course"))
+
     cur.close()
 
     return render_template("new_enroll.html", name=name, key=key, free=free)
