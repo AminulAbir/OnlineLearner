@@ -4,53 +4,28 @@
         <a href="{{ url_for('view_main') }}">Main Page</a>
         <a href="{{ url_for('new_course') }}">Create Course</a>
     </div>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <style>
-    * {
-      box-sizing: border-box;
-    }
-
-    /* Create two equal columns that floats next to each other */
-    .column {
-      float: left;
-      width: 50%;
-      padding: 10px;
-      height: 300px; /* Should be removed. Only for demonstration */
-    }
-
-    /* Clear floats after the columns */
-    .row:after {
-      content: "";
-      display: table;
-      clear: both;
-    }
-    </style>
 {% endblock %}
 {% block content %}
-    <div class="row">
-        <div class="column">
-            <p><h1>My Courses</h1></p>
-            {% for val in value %}
-            <p>ID: {{ val[0] }}</p>
-            <p>Name: <a href="{{ url_for('view_course_detail', cid=val[0]) }}">{{ val[1] }}</a></p>
-            <p>Description: {{ val[2] }}</p>
-            <p>Free Places: {{ val[4] }}</p>
-            <p>Creator: {{ val[6] }}</p>
-            {% endfor %}
-        </div>
-        <div class="column">
-            <p><h1>Available Courses</h1></p>
-        {% if values %}
-            {% for vals in values %}
-               <p>ID: {{ vals[0] }}</p>
-               <p>Name: <a href="{{ url_for('view_course_detail', cid=vals[0]) }}">{{ vals[1] }}</a></p>
-               <p>Description: {{ vals[2] }}</p>
-               <p>Free Places: {{ vals[4] }}</p>
-               <p>Creator: {{ vals[5] }}</p>
-            {% endfor %}
-        {% else %}
-            <p>No available courses right now</p>
-        {% endif %}
-        </div>
-    </div>
+    <p><h1>My Courses</h1></p>
+   {% for val in value %}
+       <p>ID: {{ val[0] }}</p>
+       <p>Name: <a href="{{ url_for('view_course_detail', cid=val[0]) }}">{{ val[1] }}</a></p>
+       <p>Description: {{ val[2] }}</p>
+       <p>Free Places: {{ val[4] }}</p>
+       <p>Creator: {{ val[6] }}</p>
+    {% endfor %}
+
+    <p><h1>Available Courses</h1></p>
+    {% if values %}
+        {% for vals in values %}
+       <p>ID: {{ vals[0] }}</p>
+       <p>Name: <a href="{{ url_for('view_course_detail', cid=vals[0]) }}">{{ vals[1] }}</a></p>
+       <p>Description: {{ vals[2] }}</p>
+       <p>Free Places: {{ vals[4] }}</p>
+       <p>Creator: {{ vals[5] }}</p>
+        {% endfor %}
+    {% else %}
+        <p>No available courses right now</p>
+    {% endif %}
+
 {% endblock %}
