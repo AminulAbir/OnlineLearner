@@ -1,18 +1,14 @@
-<html>
-    {% with messages = get_flashed_messages() %}
-        {% if messages %}
-            {% for message in messages %}
-                <!-- Do something with the message -->
-                <p>{{ message }}</p><br>
-            {% endfor %}
-        {% endif %}
-    {% endwith %}
+{% extends "layout.html" %}
+{% block title %}
     <h1>{{ name }}</h1>
-
-    <form method="POST" action="">
-        {% if key %}
-            Enrollment Key<input type="text" name="ek">
-        {% endif %}
-        <input type="submit" value="enroll">
-    </form>
-</html>
+{% endblock %}
+{% block content %}
+    <div>
+        <form method="POST" action="">
+            {% if key %}
+                Enrollment Key<input type="text" name="ek">
+            {% endif %}
+            <input type="submit" value="enroll">
+        </form>
+    </div>
+{% endblock %}

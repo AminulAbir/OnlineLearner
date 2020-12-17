@@ -210,6 +210,10 @@ def assess(cid):
     for obj in objAssess:
         arrayAssess.append(obj)
 
+    # if a course has no submissions then shows this error
+    if not arrayAssess:
+        abort(404, description="This course has no submissions yet.")
+
     objRandom = random.choice(arrayAssess)
 
     cur.execute("select submission, user from canrate")
@@ -227,6 +231,11 @@ def assess(cid):
         objAssess = cur.fetchall()
         for obj in objAssess:
             arrayAssess2.append(obj)
+
+        # if a course has no submissions then shows this error
+        if not arrayAssess2:
+            abort(404, description="This course has no submissions yet.")
+
         objRandom = random.choice(arrayAssess2)
 
     cur.close()
