@@ -1,6 +1,7 @@
 CREATE TABLE users (
   	email VARCHAR(50) NOT NULL,
   	name VARCHAR(50) NOT NULL,
+  	password VARCHAR(20) NOT NULL,
   	number INT NOT NULL auto_increment,
 	PRIMARY KEY (number)
 );
@@ -80,13 +81,13 @@ create view avgGrade as
 select avg(grade) as avgGrade, comment, submission, user from canrate group by submission;
 
 
-INSERT INTO users (email, name) VALUES
-	('dummy@dummy.com', 'DummyUser'),
-	('alan@turing.com', 'Alan Turing'),
-	('donald@eKnuth.com', 'DonaldEKnuth'),
-	('tim@bernersLee.com', 'Tim Berners Lee'),
-	('fuhr@fuhr.com', 'Nobert Fuhr'),
-	('aker@aker.com', 'Ahmet Aker')
+INSERT INTO users (email, name, password) VALUES
+	('dummy@dummy.com', 'DummyUser', 'dummy'),
+	('alan@turing.com', 'Alan Turing', 'alan'),
+	('donald@eKnuth.com', 'DonaldEKnuth', 'donald'),
+	('tim@bernersLee.com', 'Tim Berners Lee', 'tim'),
+	('fuhr@fuhr.com', 'Nobert Fuhr', 'fuhr'),
+	('aker@aker.com', 'Ahmet Aker', 'aker')
 ;
 
 INSERT INTO course (name, description, enrollmentkey, free_places, creator)  VALUES

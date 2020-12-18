@@ -25,63 +25,69 @@ def view_main():
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
-    if request.method == 'POST':
-        name = request.form.get("nm")
-        email = request.form.get("em")
-        password = request.form.get("ps")
+    try:
+        if request.method == 'POST':
+            name = request.form.get("nm")
+            email = request.form.get("em")
+            password = request.form.get("ps")
 
-        # for checking whether the current user with same email in database
-        cur = mysql.connection.cursor()
-        cur.execute("select * from users")
-        eValue = cur.fetchall()
+            # for checking whether the current user with same email in database
+            cur = mysql.connection.cursor()
+            cur.execute("select * from users")
+            eValue = cur.fetchall()
 
-        # check for the same email was used previously
-        for ev in eValue:
-            if email == ev[0]:
-                flash("You have already an account with this email", "danger")
-                cur.close()
-                return redirect(url_for("view_main"))
+            # check for the same email was used previously
+            for ev in eValue:
+                if email == ev[0]:
+                    flash("You have already an account with this email", "danger")
+                    cur.close()
+                    return redirect(url_for("view_main"))
 
-        cur.execute("insert into users(email, name, password) values(%s, %s, %s)", (email, name, password))
-        mysql.connection.commit()
-        cur.close()
-        flash("Account has been created successfully", "success")
-        return redirect(url_for("login"))
-    return render_template("view_main.html")
+            cur.execute("insert into users(email, name, password) values(%s, %s, %s)", (email, name, password))
+            mysql.connection.commit()
+            cur.close()
+            flash("Account has been created successfully", "success")
+            return redirect(url_for("login"))
+        return render_template("view_main.html")
+    except Exception as e:
+        raise e
 
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    if request.method == 'POST':
-        email = request.form.get("eml")
-        password = request.form.get("psl")
+    try:
+        if request.method == 'POST':
+            email = request.form.get("eml")
+            password = request.form.get("psl")
 
-        # for checking whether the current user with same email in database
-        cur = mysql.connection.cursor()
-        cur.execute("SELECT email, password FROM users")
-        empass = cur.fetchall()
+            # for checking whether the current user with same email in database
+            cur = mysql.connection.cursor()
+            cur.execute("SELECT email, password FROM users")
+            empass = cur.fetchall()
 
-        cur.execute("SELECT number FROM users where email=%s and password=%s", (email, password))
-        value = cur.fetchall()
-        cur.close()
+            cur.execute("SELECT number FROM users where email=%s and password=%s", (email, password))
+            value = cur.fetchall()
+            cur.close()
 
-        # check for password match
-        for ep in empass:
-            if email == ep[0]:
-                if password != ep[1]:
-                    flash("Wrong password!", "danger")
-                    return redirect(url_for("login"))
+            # check for password match
+            for ep in empass:
+                if email == ep[0]:
+                    if password != ep[1]:
+                        flash("Wrong password!", "danger")
+                        return redirect(url_for("login"))
 
-        # for creating session and store the logged in user id
-        if value:
-            session["user"] = value[0]
-            flash("You are successfully logged in", "success")
-            return redirect(url_for("view_course"))
-        else:
-            flash("There is no account with this email. Create one here!", "danger")
-            return redirect(url_for("register"))
+            # for creating session and store the logged in user id
+            if value:
+                session["user"] = value[0]
+                flash("You are successfully logged in", "success")
+                return redirect(url_for("view_course"))
+            else:
+                flash("There is no account with this email. Create one here!", "danger")
+                return redirect(url_for("register"))
 
-    return render_template("view_main.html")
+        return render_template("view_main.html")
+    except Exception as e:
+        raise e
 
 
 @app.route('/logout')
@@ -99,33 +105,35 @@ def new_course():
     else:
         flash("Log In first", "danger")
         return redirect(url_for("login"))
+    try:
+        if request.method == 'POST':
+            name = request.form["nm"]
+            key = request.form["ek"]
+            place = request.form["fp"]
+            text = request.form["des"]
 
-    if request.method == 'POST':
-        name = request.form["nm"]
-        key = request.form["ek"]
-        place = request.form["fp"]
-        text = request.form["des"]
+            if len(name)==0 or len(name)>50:
+                abort(404, description="Enter Valid Name")
 
-        if len(name)==0 or len(name)>50:
-            abort(404, description="Enter Valid Name")
+            intPlace = int(place)
 
-        intPlace = int(place)
+            if isinstance(intPlace, int)==False or intPlace>100:
+                abort(404, description="Enter Valid number of free place")
 
-        if isinstance(intPlace, int)==False or intPlace>100:
-            abort(404, description="Enter Valid number of free place")
-
-        cur = mysql.connection.cursor()
-        if key:
-            cur.execute("INSERT INTO course(name, description, enrollmentkey, free_places, creator) VALUES(%s, %s, %s, %s, %s)", (name, text, key, place, user))
-            mysql.connection.commit()
-        else:
-            cur.execute(
-                "INSERT INTO course(name, description, free_places, creator) VALUES(%s, %s, %s, %s)",
-                (name, text, place, user))
-            mysql.connection.commit()
-        cur.close()
-        flash("Course created successfully", "success")
-        return redirect(url_for("view_main"))
+            cur = mysql.connection.cursor()
+            if key:
+                cur.execute("INSERT INTO course(name, description, enrollmentkey, free_places, creator) VALUES(%s, %s, %s, %s, %s)", (name, text, key, place, user))
+                mysql.connection.commit()
+            else:
+                cur.execute(
+                    "INSERT INTO course(name, description, free_places, creator) VALUES(%s, %s, %s, %s)",
+                    (name, text, place, user))
+                mysql.connection.commit()
+            cur.close()
+            flash("Course created successfully", "success")
+            return redirect(url_for("view_main"))
+    except Exception as e:
+        raise e
 
     return render_template("new_course.html")
 
@@ -213,10 +221,28 @@ def new_enroll(cid):
         flash("Course is already full", "danger")
         return redirect(url_for("view_course"))
 
-    if request.method == 'POST':
-        if key != None :
-            ekey = request.form["ek"]
-            if key == ekey:
+    try:
+        if request.method == 'POST':
+            if key != None :
+                ekey = request.form["ek"]
+                if key == ekey:
+                    cur.execute(
+                        "INSERT INTO enroll(user, course, date_of_entry) VALUES(%s, %s, %s)",
+                        (user, cid, datetime.today().strftime('%Y-%m-%d')))
+                    mysql.connection.commit()
+                    flash("Welcome to the course!!!", "success")
+
+                    red = free[0][0]-1
+
+                    cur.execute(
+                        "UPDATE course SET free_places = %s where ID = %s",(red, cid))
+                    mysql.connection.commit()
+                    cur.close()
+
+                    return redirect(url_for("view_course"))
+                else:
+                    flash("Wrong enrollment key", "danger")
+            else:
                 cur.execute(
                     "INSERT INTO enroll(user, course, date_of_entry) VALUES(%s, %s, %s)",
                     (user, cid, datetime.today().strftime('%Y-%m-%d')))
@@ -225,28 +251,13 @@ def new_enroll(cid):
 
                 red = free[0][0]-1
 
-                cur.execute(
-                    "UPDATE course SET free_places = %s where ID = %s",(red, cid))
+                cur.execute("UPDATE course SET free_places = %s where ID = %s", (red, cid))
                 mysql.connection.commit()
                 cur.close()
 
                 return redirect(url_for("view_course"))
-            else:
-                flash("Wrong enrollment key", "danger")
-        else:
-            cur.execute(
-                "INSERT INTO enroll(user, course, date_of_entry) VALUES(%s, %s, %s)",
-                (user, cid, datetime.today().strftime('%Y-%m-%d')))
-            mysql.connection.commit()
-            flash("Welcome to the course!!!", "success")
-
-            red = free[0][0]-1
-
-            cur.execute("UPDATE course SET free_places = %s where ID = %s", (red, cid))
-            mysql.connection.commit()
-            cur.close()
-
-            return redirect(url_for("view_course"))
+    except Exception as e:
+        raise e
 
     cur.close()
 
@@ -283,27 +294,32 @@ def new_assignment(tid):
     cur.execute("select * from submit_task where number = %s", (tid,))
     obj = cur.fetchall()
     cur.close()
-    if request.method == "POST":
-        text = request.form["txt"]
-        cur = mysql.connection.cursor()
 
-        cur.execute("select * from submit")
-        asub = cur.fetchall()
-        for sub in asub:
-            if (sub[2] == tid and sub[1] == obj[0][4] and sub[3] == user):
-                abort(404, description="You can not submit for this task")
+    try:
+        if request.method == "POST":
+            text = request.form["txt"]
+            cur = mysql.connection.cursor()
 
-        cur.execute("insert into submission(submission_text) values(%s)", (text,))
-        mysql.connection.commit()
-        cur.execute("select id from submission where submission_text = %s", (text,))
-        id = cur.fetchall()
-        cur.execute("insert into submit values(%s, %s, %s, %s)", (id, obj[0][4], tid, user))
-        mysql.connection.commit()
+            cur.execute("select * from submit")
+            asub = cur.fetchall()
+            for sub in asub:
+                if (sub[2] == tid and sub[1] == obj[0][4] and sub[3] == user):
+                    abort(404, description="You can not submit for this task")
 
-        cur.close()
+            cur.execute("insert into submission(submission_text) values(%s)", (text,))
+            mysql.connection.commit()
+            cur.execute("select id from submission where submission_text = %s", (text,))
+            id = cur.fetchall()
+            cur.execute("insert into submit values(%s, %s, %s, %s)", (id, obj[0][4], tid, user))
+            mysql.connection.commit()
 
-        flash("Task Submitted successfully", "success")
-        return redirect(url_for("view_course_detail", cid=obj[0][4]))
+            cur.close()
+
+            flash("Task Submitted successfully", "success")
+            return redirect(url_for("view_course_detail", cid=obj[0][4]))
+    except Exception as e:
+        raise e
+
     return render_template("new_assignment.html", obj=obj)
 
 
@@ -358,20 +374,23 @@ def assess(cid):
 
     cur.close()
 
-    if request.method == "POST":
+    try:
+        if request.method == "POST":
 
-        grade = int(request.form.get("gd"))
-        comment = request.form["cmt"]
-        subId = int(request.form["sb"])
+            grade = int(request.form.get("gd"))
+            comment = request.form["cmt"]
+            subId = int(request.form["sb"])
 
-        if (subId, user) in subUser:
-            abort(404, description="You have already rated for the course")
+            if (subId, user) in subUser:
+                abort(404, description="You have already rated for the course")
 
-        cur = mysql.connection.cursor()
-        cur.execute("insert into canrate values(%s, %s, %s, %s)", (grade, comment, subId, user))
-        mysql.connection.commit()
-        cur.close()
-        return redirect(url_for("view_course_detail", cid=cid))
+            cur = mysql.connection.cursor()
+            cur.execute("insert into canrate values(%s, %s, %s, %s)", (grade, comment, subId, user))
+            mysql.connection.commit()
+            cur.close()
+            return redirect(url_for("view_course_detail", cid=cid))
+    except Exception as e:
+        raise e
 
     return render_template("assess.html", objRandom=objRandom)
 
