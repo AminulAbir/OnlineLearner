@@ -21,6 +21,7 @@
 
     {% if value[0][0] in idInfos %}
         <a href="{{ url_for('delete', cid=value[0][0])}}"><input type="submit" value="delete"></a>
+        <a href="{{ url_for('new_task', cid=value[0][0])}}"><input type="submit" value="create task"></a>
     {% endif %}
 
     {% if value[0][0] not in infos %}

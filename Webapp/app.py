@@ -1,10 +1,11 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, abort, session
 from flask_mysqldb import MySQL
-from datetime import datetime
+from datetime import datetime, timedelta
 import random
 
 app = Flask(__name__)
 app.secret_key = "mndkfjkdsfj"
+app.permanent_session_lifetime = timedelta(minutes=5)  # to be able to stay user in session even after closing the browser
 
 app.config['MYSQL_HOST'] = 'localhost'
 app.config['MYSQL_USER'] = 'root'
@@ -48,9 +49,9 @@ def register():
             cur.close()
             flash("Account has been created successfully", "success")
             return redirect(url_for("login"))
-        return render_template("view_main.html")
     except Exception as e:
         raise e
+    return render_template("view_main.html")
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -78,16 +79,16 @@ def login():
 
             # for creating session and store the logged in user id
             if value:
+                session.permanent = True  # to be able to stay user in session even after closing the browser
                 session["user"] = value[0]
                 flash("You are successfully logged in", "success")
                 return redirect(url_for("view_course"))
             else:
                 flash("There is no account with this email. Create one here!", "danger")
                 return redirect(url_for("register"))
-
-        return render_template("view_main.html")
     except Exception as e:
         raise e
+    return render_template("view_main.html")
 
 
 @app.route('/logout')
@@ -393,6 +394,38 @@ def assess(cid):
         raise e
 
     return render_template("assess.html", objRandom=objRandom)
+
+
+@app.route('/new_task/<int:cid>', methods=['GET', 'POST'])
+def new_task(cid):
+    # for checking whether there is user in session (logged in user)
+    if "user" in session:
+        user = session["user"]
+    else:
+        flash("Log In first", "danger")
+        return redirect(url_for("login"))
+
+    cur = mysql.connection.cursor()
+    cur.execute("select name from course where ID = %s", (cid,))
+    objCourse = cur.fetchall()
+    cur.close()
+    try:
+        if request.method == "POST":
+            task = request.form["tsk"]
+            description = request.form["des"]
+
+            if task and description:
+                cur = mysql.connection.cursor()
+                cur.execute("insert into tasks(name, description, nr) values(%s, %s, %s)", (task, description, cid))
+                mysql.connection.commit()
+                cur.close()
+                flash("Task created successfully", "success")
+                return redirect(url_for("view_course_detail", cid=cid))
+            else:
+                raise Exception
+    except Exception as e:
+        raise e
+    return render_template("task.html", objCourse=objCourse)
 
 
 if __name__ == '__main__':
