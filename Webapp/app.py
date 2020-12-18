@@ -47,7 +47,7 @@ def register():
         cur.close()
         flash("Account has been created successfully", "success")
         return redirect(url_for("login"))
-    return render_template("register.html")
+    return render_template("view_main.html")
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -81,14 +81,14 @@ def login():
             flash("There is no account with this email. Create one here!", "danger")
             return redirect(url_for("register"))
 
-    return render_template("login.html")
+    return render_template("view_main.html")
 
 
 @app.route('/logout')
 def logout():
     session.pop("user", None)
     flash("You are successfully logged out", "danger")
-    return redirect(url_for("login"))
+    return redirect(url_for("view_main"))
 
 
 @app.route('/new_course', methods=['GET', 'POST'])
