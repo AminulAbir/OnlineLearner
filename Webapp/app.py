@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, abort
+from flask import Flask, render_template, request, redirect, url_for, flash, abort, session
 from flask_mysqldb import MySQL
 from datetime import datetime
 import random
@@ -12,17 +12,95 @@ app.config['MYSQL_PASSWORD'] = 'mycountry'
 app.config['MYSQL_DB'] = 'webapp'
 
 mysql = MySQL(app)
-user = 2
 
 
 @app.route('/')
 @app.route('/view_main')
 def view_main():
+    # if user is already logged in then redirect to course page
+    if "user" in session:
+        return redirect(url_for("view_course"))
+
     return render_template("view_main.html")
+
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        name = request.form.get("nm")
+        email = request.form.get("em")
+        password = request.form.get("ps")
+
+        # for checking whether the current user with same email in database
+        cur = mysql.connection.cursor()
+        cur.execute("select * from users")
+        eValue = cur.fetchall()
+
+        # check for the same email was used previously
+        for ev in eValue:
+            if email == ev[0]:
+                flash("You have already an account with this email", "danger")
+                cur.close()
+                return redirect(url_for("view_main"))
+
+        cur.execute("insert into users(email, name, password) values(%s, %s, %s)", (email, name, password))
+        mysql.connection.commit()
+        cur.close()
+        flash("Account has been created successfully", "success")
+        return redirect(url_for("login"))
+    return render_template("register.html")
+
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        email = request.form.get("eml")
+        password = request.form.get("psl")
+
+        # for checking whether the current user with same email in database
+        cur = mysql.connection.cursor()
+        cur.execute("SELECT email, password FROM users")
+        empass = cur.fetchall()
+
+        cur.execute("SELECT number FROM users where email=%s and password=%s", (email, password))
+        value = cur.fetchall()
+        cur.close()
+
+        # check for password match
+        for ep in empass:
+            if email == ep[0]:
+                if password != ep[1]:
+                    flash("Wrong password!", "danger")
+                    return redirect(url_for("login"))
+
+        # for creating session and store the logged in user id
+        if value:
+            session["user"] = value[0]
+            flash("You are successfully logged in", "success")
+            return redirect(url_for("view_course"))
+        else:
+            flash("There is no account with this email. Create one here!", "danger")
+            return redirect(url_for("register"))
+
+    return render_template("login.html")
+
+
+@app.route('/logout')
+def logout():
+    session.pop("user", None)
+    flash("You are successfully logged out", "danger")
+    return redirect(url_for("login"))
 
 
 @app.route('/new_course', methods=['GET', 'POST'])
 def new_course():
+    # for checking whether there is user in session (logged in user)
+    if "user" in session:
+        user = session["user"]
+    else:
+        flash("Log In first", "danger")
+        return redirect(url_for("login"))
+
     if request.method == 'POST':
         name = request.form["nm"]
         key = request.form["ek"]
@@ -55,6 +133,12 @@ def new_course():
 
 @app.route('/view_course')
 def view_course():
+    # for checking whether there is user in session (logged in user)
+    if "user" in session:
+        user = session["user"]
+    else:
+        flash("Log In first", "danger")
+        return redirect(url_for("login"))
 
     cur = mysql.connection.cursor()
     cur.execute("SELECT * FROM view_course WHERE user = %s", (user,))
@@ -72,6 +156,13 @@ def view_course():
 
 @app.route('/view_course/<int:cid>')
 def view_course_detail(cid):
+    # for checking whether there is user in session (logged in user)
+    if "user" in session:
+        user = session["user"]
+    else:
+        flash("Log In first", "danger")
+        return redirect(url_for("login"))
+
     infos = [] # list of course id from enroll
     idInfos = [] # list for delete function
 
@@ -102,6 +193,13 @@ def view_course_detail(cid):
 
 @app.route('/new_enroll/<int:cid>', methods=['GET', 'POST'])
 def new_enroll(cid):
+    # for checking whether there is user in session (logged in user)
+    if "user" in session:
+        user = session["user"]
+    else:
+        flash("Log In first", "danger")
+        return redirect(url_for("login"))
+
     cur = mysql.connection.cursor()
     cur.execute("select name, enrollmentkey from course where ID = %s", (cid,))
     info = cur.fetchall()
@@ -158,6 +256,13 @@ def new_enroll(cid):
 
 @app.route('/delete/<int:cid>')
 def delete(cid):
+    # for checking whether there is user in session (logged in user)
+    if "user" in session:
+        user = session["user"]
+    else:
+        flash("Log In first", "danger")
+        return redirect(url_for("login"))
+
     cur = mysql.connection.cursor()
     cur.execute("delete from course where ID = %s", (cid,))
     mysql.connection.commit()
@@ -168,6 +273,13 @@ def delete(cid):
 
 @app.route('/new_assignment/<int:tid>', methods=['GET', 'POST'])
 def new_assignment(tid):
+    # for checking whether there is user in session (logged in user)
+    if "user" in session:
+        user = session["user"]
+    else:
+        flash("Log In first", "danger")
+        return redirect(url_for("login"))
+
     cur = mysql.connection.cursor()
     cur.execute("select * from submit_task where number = %s", (tid,))
     obj = cur.fetchall()
@@ -198,8 +310,15 @@ def new_assignment(tid):
 
 @app.route('/assess/<int:cid>', methods=['GET', 'POST'])
 def assess(cid):
-    arrayAssess = []
-    arrayAssess2 = []
+    # for checking whether there is user in session (logged in user)
+    if "user" in session:
+        user = session["user"]
+    else:
+        flash("Log In first", "danger")
+        return redirect(url_for("login"))
+
+    arrayAssess = [] # array for checking whether a task is already submitted
+    arrayAssess2 = [] # array to check wheether a course has submission or not
 
 # for randomly display of tasks in rating option
     cur = mysql.connection.cursor()

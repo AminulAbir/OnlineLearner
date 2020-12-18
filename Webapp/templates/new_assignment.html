@@ -3,6 +3,14 @@
 {% endblock %}
 {% block content %}
     <div>
+        <a href="{{ url_for('new_course') }}">Create Course</a>
+        <a href="{{ url_for('view_course') }}">View Courses</a>
+        {% if "user" in session %}
+            <a href="{{ url_for('logout') }}">Log Out</a>
+        {% endif %}
+    </div>
+
+    <div>
         Kurs: {{ obj[0][3] }} <br>
         Task: {{ obj[0][1] }} <br>
         Description: {{ obj[0][2] }} <br>
