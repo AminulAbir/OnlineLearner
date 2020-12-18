@@ -20,7 +20,6 @@ def view_main():
     # if user is already logged in then redirect to course page
     if "user" in session:
         return redirect(url_for("view_course"))
-
     return render_template("view_main.html")
 
 
