@@ -67,7 +67,7 @@ def login():
             empass = cur.fetchall()
 
             cur.execute("SELECT number FROM users where email=%s and password=%s", (email, password))
-            value = cur.fetchall()
+            value = cur.fetchone()
             cur.close()
 
             # check for password match
@@ -80,7 +80,7 @@ def login():
             # for creating session and store the logged in user id
             if value:
                 session.permanent = True  # to be able to stay user in session even after closing the browser
-                session["user"] = value[0]
+                session["user"] = int(value[0])
                 flash("You are successfully logged in", "success")
                 return redirect(url_for("view_course"))
             else:
@@ -304,7 +304,7 @@ def new_assignment(tid):
             cur.execute("select * from submit")
             asub = cur.fetchall()
             for sub in asub:
-                if (sub[2] == tid and sub[1] == obj[0][4] and sub[3] == user):
+                if sub[2] == tid and sub[1] == obj[0][4] and sub[3] == user:
                     abort(404, description="You can not submit for this task")
 
             cur.execute("insert into submission(submission_text) values(%s)", (text,))
@@ -364,10 +364,11 @@ def assess(cid):
             "select ssb.tid, ssb.sid, t.name, t.description, ssb.submission_text from (SELECT * FROM submit s join submission sb on s.sid=sb.id where cid = %s and sid != %s and user != %s) as ssb join tasks t on ssb.tid=t.number",
             (cid, objRandom[1], user))
         objAssess = cur.fetchall()
+
+        # if a course has no submissions then shows this error
         for obj in objAssess:
             arrayAssess2.append(obj)
 
-        # if a course has no submissions then shows this error
         if not arrayAssess2:
             abort(404, description="This course has no submissions yet.")
 
@@ -389,6 +390,7 @@ def assess(cid):
             cur.execute("insert into canrate values(%s, %s, %s, %s)", (grade, comment, subId, user))
             mysql.connection.commit()
             cur.close()
+            flash("Successfully graded for the task", "success")
             return redirect(url_for("view_course_detail", cid=cid))
     except Exception as e:
         raise e
@@ -418,6 +420,7 @@ def new_task(cid):
                 cur = mysql.connection.cursor()
                 cur.execute("insert into tasks(name, description, nr) values(%s, %s, %s)", (task, description, cid))
                 mysql.connection.commit()
+
                 cur.close()
                 flash("Task created successfully", "success")
                 return redirect(url_for("view_course_detail", cid=cid))
