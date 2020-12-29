@@ -80,6 +80,8 @@ select t.number, t.name, t.description, c.name cname, t.nr from tasks t join cou
 create view avgGrade as
 select avg(grade) as avgGrade, comment, submission, user from canrate group by submission;
 
+create view searchedCourse as
+SELECT ID, c.name as cname, c.description, c.free_places, u.name as uname FROM course as c join users as u on c.creator=u.number;
 
 INSERT INTO users (email, name, password) VALUES
 	('dummy@dummy.com', 'DummyUser', 'dummy'),

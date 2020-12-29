@@ -106,6 +106,11 @@ def new_course():
     else:
         flash("Log In first", "danger")
         return redirect(url_for("login"))
+
+    cur = mysql.connection.cursor()
+    # this querry for autocomplete the search field
+    cur.execute("select name from course")
+    nameData = cur.fetchall()
     try:
         if request.method == 'POST':
             name = request.form["nm"]
@@ -121,7 +126,6 @@ def new_course():
             if isinstance(intPlace, int)==False or intPlace>100:
                 abort(404, description="Enter Valid number of free place")
 
-            cur = mysql.connection.cursor()
             if key:
                 cur.execute("INSERT INTO course(name, description, enrollmentkey, free_places, creator) VALUES(%s, %s, %s, %s, %s)", (name, text, key, place, user))
                 mysql.connection.commit()
@@ -136,7 +140,7 @@ def new_course():
     except Exception as e:
         raise e
 
-    return render_template("new_course.html")
+    return render_template("new_course.html", nameData=nameData)
 
 
 @app.route('/view_course')
@@ -150,16 +154,18 @@ def view_course():
 
     cur = mysql.connection.cursor()
     cur.execute("SELECT * FROM view_course WHERE user = %s", (user,))
-
     value = cur.fetchall()
 
     cur.execute("select distinct ID, name, description, enrollmentkey, free_places, uname from view_course where ID not in (SELECT ID FROM view_course WHERE user = %s)", (user,))
-
     values = cur.fetchall()
+
+    # this querry for autocomplete the search field
+    cur.execute("select name from course")
+    nameData = cur.fetchall()
 
     cur.close()
 
-    return render_template("view_course.html", value=value, values=values)
+    return render_template("view_course.html", value=value, values=values, nameData=nameData)
 
 
 @app.route('/view_course/<int:cid>')
@@ -185,6 +191,10 @@ def view_course_detail(cid):
     cur.execute("select ID from course where creator = %s", (user,))
     idInfo = cur.fetchall()
 
+    # this querry for autocomplete the search field
+    cur.execute("select name from course")
+    nameData = cur.fetchall()
+
     for i in info:
         infos.append(int(i[1]))
 
@@ -196,7 +206,7 @@ def view_course_detail(cid):
 
     cur.close()
 
-    return render_template("view_course_detail.html", value=value, user=user, infos=infos, idInfos=idInfos, stInfo=stInfo)
+    return render_template("view_course_detail.html", value=value, user=user, infos=infos, idInfos=idInfos, stInfo=stInfo, nameData=nameData)
 
 
 @app.route('/new_enroll/<int:cid>', methods=['GET', 'POST'])
@@ -216,6 +226,10 @@ def new_enroll(cid):
 
     cur.execute("select free_places from course where ID = %s", (cid,))
     free = cur.fetchall()
+
+    # this querry for autocomplete the search field
+    cur.execute("select name from course")
+    nameData = cur.fetchall()
 
     # if there is no free place then return to course page
     if not free[0][0]:
@@ -262,7 +276,7 @@ def new_enroll(cid):
 
     cur.close()
 
-    return render_template("new_enroll.html", name=name, key=key, free=free)
+    return render_template("new_enroll.html", name=name, key=key, free=free, nameData=nameData)
 
 
 @app.route('/delete/<int:cid>')
@@ -294,6 +308,11 @@ def new_assignment(tid):
     cur = mysql.connection.cursor()
     cur.execute("select * from submit_task where number = %s", (tid,))
     obj = cur.fetchall()
+
+    # this querry for autocomplete the search field
+    cur.execute("select name from course")
+    nameData = cur.fetchall()
+
     cur.close()
 
     try:
@@ -321,7 +340,7 @@ def new_assignment(tid):
     except Exception as e:
         raise e
 
-    return render_template("new_assignment.html", obj=obj)
+    return render_template("new_assignment.html", obj=obj, nameData=nameData)
 
 
 @app.route('/assess/<int:cid>', methods=['GET', 'POST'])
@@ -374,6 +393,10 @@ def assess(cid):
 
         objRandom = random.choice(arrayAssess2)
 
+    # this querry for autocomplete the search field
+    cur.execute("select name from course")
+    nameData = cur.fetchall()
+
     cur.close()
 
     try:
@@ -395,7 +418,7 @@ def assess(cid):
     except Exception as e:
         raise e
 
-    return render_template("assess.html", objRandom=objRandom)
+    return render_template("assess.html", objRandom=objRandom, nameData=nameData)
 
 
 @app.route('/new_task/<int:cid>', methods=['GET', 'POST'])
@@ -410,6 +433,11 @@ def new_task(cid):
     cur = mysql.connection.cursor()
     cur.execute("select name from course where ID = %s", (cid,))
     objCourse = cur.fetchall()
+
+    # this querry for autocomplete the search field
+    cur.execute("select name from course")
+    nameData = cur.fetchall()
+
     cur.close()
     try:
         if request.method == "POST":
@@ -428,7 +456,24 @@ def new_task(cid):
                 raise Exception
     except Exception as e:
         raise e
-    return render_template("task.html", objCourse=objCourse)
+    return render_template("task.html", objCourse=objCourse, nameData=nameData)
+
+
+@app.route('/search', methods=['GET', 'POST'])
+def search():
+    if request.method == "POST":
+        cur = mysql.connection.cursor()
+        searchedName = request.form.get("srch")
+        sname = "%"+searchedName.lower()+"%"
+        cur.execute("SELECT * FROM searchedcourse WHERE lower(cname) like %s", (sname,))
+        nameobj = cur.fetchall()
+
+        # this querry for autocomplete the search field
+        cur.execute("select name from course")
+        nameData=cur.fetchall()
+
+        cur.close()
+        return render_template("search.html", nameobj=nameobj, nameData=nameData)
 
 
 if __name__ == '__main__':

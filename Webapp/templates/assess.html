@@ -1,7 +1,5 @@
 {% extends "layout.html" %}
 {% block title %}
-{% endblock %}
-{% block content %}
     <div>
         <a href="{{ url_for('new_course') }}">Create Course</a>
         <a href="{{ url_for('view_course') }}">View Courses</a>
@@ -9,7 +7,19 @@
             <a href="{{ url_for('logout') }}">Log Out</a>
         {% endif %}
     </div>
-
+    <div>
+        <form method="POST" action={{ url_for("search") }}>
+            <input type="search" name="srch" list="searched">
+            <input type="submit" value="Search">
+            <datalist id="searched">
+                {% for name in nameData %}
+                    <option value="{{ name[0] }}">
+                {% endfor %}
+            </datalist>
+        </form>
+    </div>
+{% endblock %}
+{% block content %}
     <div>
         <p>Task: {{ objRandom[2] }}</p><br>
         <p>Description: {{ objRandom[3] }}</p><br>
